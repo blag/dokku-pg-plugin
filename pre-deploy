@@ -3,15 +3,16 @@ set -e;
 
 APP="$1"
 
+DOCKER_IMAGE=blag/postgresql
 PG_APP_IMAGE="postgresql/$APP"
 
 # Check if an existing DB volume exists
-PG_APP_IMAGE_ID=$(docker images | grep "$PG_APP_IMAGE" |  awk '{print $3}')
+PG_APP_IMAGE_ID=$(docker images | grep "$PG_APP_IMAGE" |  awk '{ print $3 }')
 if [[ -n $PG_APP_IMAGE_ID ]]; then
     echo    "-----> Checking status of PostgreSQL"
 
     # Check if DB container is installed
-    PG_IMAGE=$(docker images | grep "kloadut/postgresql " |  awk '{print $3}')
+    PG_IMAGE=$(docker images | grep "$DOCKER_IMAGE " |  awk '{ print $3 }')
     if [[ -z $PG_IMAGE ]]; then
         echo "PostgreSQL image not found... Did you run 'dokku plugins-install' ?"
         exit 1
@@ -20,18 +21,41 @@ if [[ -n $PG_APP_IMAGE_ID ]]; then
     echo    "       Found image postgresql/$APP database"
     echo -n "       Checking status... "
 
-    PG_APP_CONTAINER_ID=$(docker ps | grep "$PG_APP_IMAGE" |  awk '{print $1}')
+    PG_APP_CONTAINER_ID=$(docker ps | grep "$PG_APP_IMAGE" |  awk '{ print $1 }')
     if [[ -n $PG_APP_CONTAINER_ID ]]; then
         echo "ok."
     else
         echo "stopped."
 
-        PG_VOLUME="`cat $DOKKU_ROOT/.postgresql/volume_$APP`:/opt/postgresql"
-        PG_PORT="`cat $DOKKU_ROOT/.postgresql/port_$APP`"
+        PG_CONFIG_VOLUME="$DOKKU_ROOT/$APP/postgresql/volumes/config:/etc/postgresql/9.3"
+        PG_LOG_VOLUME="$DOKKU_ROOT/$APP/postgresql/volumes/log:/var/log/postgresql/9.3"
+        PG_DATA_VOLUME="$DOKKU_ROOT/$APP/postgresql/volumes/data:/var/lib/postgresql"
+        PG_PORT="$DOKKU_ROOT/$APP/postgresql/PORT"
+        PG_PASSWORD="$DOKKU_ROOT/$APP/postgresql/PASSWORD"
+
+        if [[ ! -d "$PG_CONFIG_VOLUME" ]]; then
+            mkdir -p "$PG_CONFIG_VOLUME"
+        fi
+        if [[ ! -d "$PG_LOG_VOLUME" ]]; then
+            mkdir -p "PG_LOG_VOLUME"
+        fi
+        if [[ ! -d "$PG_DATA_VOLUME" ]]; then
+            mkdir -p "PG_DATA_VOLUME"
+        fi
+        if [[ ! -f "$PG_PORT" ]]; then
+            touch "$PG_PORT"
+        fi
+        if [[ ! -f "$PG_PASSWORD" ]]; then
+            DB_PASSWORD=$(echo $(date)$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 16)"$APP" | md5sum | awk '{ print $1 }')
+            echo $DB_PASSWORD > "$PG_PASSWORD"
+            chown dokku: "$PG_PASSWORD"
+            chmod 700 "$PG_PASSWORD"
+        else
+            DB_PASSWORD=$(cat "$PG_PASSWORD")
+        fi
 
         echo -n "       Launching $PG_APP_IMAGE... "
-        echo "COMMAND: docker run -v $PG_VOLUME -p 5432:$PG_PORT -d $PG_APP_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD"
-        ID=$(docker run -v $PG_VOLUME -p $PG_PORT:5432 -d $PG_APP_IMAGE /usr/bin/start_pgsql.sh $DB_PASSWORD)
+        ID=$(docker run -v $PG_CONFIG_VOLUME -v $PG_LOG_VOLUME -v $PG_DATA_VOLUME -p $PG_PORT:5432 -d $PG_APP_IMAGE /run.sh $DB_PASSWORD)
         sleep 1
         echo "ok."
     fi
