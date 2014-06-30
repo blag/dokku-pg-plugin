@@ -23,14 +23,14 @@ Commands
 --------
 ```
 $ dokku help
-    postgresql:create <db>                         Create a PostgreSQL container
-    postgresql:delete <db>                         Delete specified PostgreSQL container
-    postgresql:dump <db> > dump_file.sql           Dump database data
-    postgresql:info <db>                           Display database informations
+    postgresql:create <db>                          Create a PostgreSQL container
+    postgresql:delete <db>                          Delete specified PostgreSQL container
+    postgresql:dump <db> > dump_file.sql            Dump database data
+    postgresql:info <db>                            Display database informations
     postgresql:link <app> <db>                      Link an app to a PostgreSQL database
     postgresql:list                                 Display list of PostgreSQL containers
-    postgresql:logs <db>                           Display last logs from PostgreSQL container
-    postgresql:restore <db> < dump_file.sql        Restore database data from a previous dump
+    postgresql:logs <db>                            Display last logs from PostgreSQL container
+    postgresql:restore <db> < dump_file.sql         Restore database data from a previous dump
 ```
 
 Simple usage
