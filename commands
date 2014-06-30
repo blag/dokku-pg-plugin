@@ -186,6 +186,13 @@ case "$1" in
             echo "  - $CONTAINER"
         done
     fi
+
+    # Check for old containers
+    CONTAINERS=$(ls -d $DOKKU_ROOT/.postgresql/*/ | sed "s/^$DOKKU_ROOT/.postgresql/\(.*\)/$|\1|")
+    echo "There are some old PostgreSQL containers:"
+    for CONTAINER in $CONTAINERS; do
+        echo "  - [old] $CONTAINER"
+    done
     ;;
 
   postgresql:restore)
