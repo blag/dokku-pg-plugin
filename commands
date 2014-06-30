@@ -177,7 +177,7 @@ case "$1" in
     ;;
 
   postgresql:list)
-    CONTAINERS=$(ls -d $DOKKU_ROOT/*/postgresql/volumes 2> /dev/null | sed "s|^$DOKKU_ROOT/\(.*\)/postgresql/volumes$|\1|")
+    CONTAINERS=$(ls -d $DOKKU_ROOT/*/postgresql/volumes 2>/dev/null | sed "s|^$DOKKU_ROOT/\(.*\)/postgresql/volumes$|\1|")
     if [[ -z $CONTAINERS ]]; then
         echo "There are no PostgreSQL containers created."
     else
@@ -188,7 +188,7 @@ case "$1" in
     fi
 
     # Check for old containers
-    CONTAINERS=$(ls -d $DOKKU_ROOT/.postgresql/*/ | sed "s/^$DOKKU_ROOT/.postgresql/\(.*\)/$|\1|")
+    CONTAINERS=$(ls -d $DOKKU_ROOT/.postgresql/volume_* 2>/dev/null | sed "s|^$DOKKU_ROOT/.postgresql/volume_\(.*\)$|\1|")
     echo "There are some old PostgreSQL containers:"
     for CONTAINER in $CONTAINERS; do
         echo "  - [old] $CONTAINER"
